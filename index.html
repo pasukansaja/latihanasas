@@ -25,7 +25,7 @@ main{max-width:960px;margin:0 auto;padding:14px 12px 40px}
 /* topbar */
 .topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);
   border-bottom:1px solid var(--line);padding:9px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
-.brand{display:flex;gap:10px;align-items:center;min-width:0}
+.brand{display:flex;gap:10px;align-items:center;min-width:0;user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:default}
 .logo{font-size:1.5rem}
 .brand>div{min-width:0;overflow:hidden}
 .brand h1,.brand p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -140,7 +140,7 @@ ol.steps li{margin:6px 0}
 <body>
 
 <header class="topbar">
-  <div class="brand">
+  <div class="brand" id="adminTrigger">
     <span class="logo">⚗️</span>
     <div>
       <h1>Latihan ASAS Kimia Kelas X</h1>
@@ -149,7 +149,6 @@ ol.steps li{margin:6px 0}
   </div>
   <div class="top-right">
     <div class="timer" id="timer" hidden>⏱ <span id="timerText">–:–</span></div>
-    <button class="iconbtn" id="btnSettings" type="button" title="Pengaturan guru & panduan">⚙️</button>
   </div>
 </header>
 
@@ -161,8 +160,8 @@ ol.steps li{margin:6px 0}
       <p>Kimia Kelas X · Semester 1 · Kurikulum Merdeka — sesuai kisi-kisi: ilmu kimia &amp; laboratorium,
       kimia hijau, nanoteknologi, struktur atom, dan periodisitas unsur.</p>
       <ul class="info-grid">
-        <li><b>30</b><span>Soal</span></li>
-        <li><b>20+5+5</b><span>PG · Rumpang · Esai</span></li>
+        <li><b id="infoJml">30</b><span>Soal</span></li>
+        <li><b id="infoKomposisi">20+5+5</b><span>PG · Rumpang · Esai</span></li>
         <li><b>100</b><span>Poin maks</span></li>
         <li><b id="durasiInfo">90</b><span>Menit</span></li>
       </ul>
@@ -209,19 +208,47 @@ ol.steps li{margin:6px 0}
   </div>
 </div>
 
+<!-- ===== MODAL PIN ADMIN ===== -->
+<div class="modal-backdrop" id="modalPin" hidden>
+  <div class="modal" style="max-width:380px">
+    <h3>🔐 Panel Admin Guru</h3>
+    <p class="hint">Pengaturan hanya untuk guru/admin. Masukkan PIN untuk membuka panel.</p>
+    <div class="form" style="margin:8px 0">
+      <div><label for="inPin">PIN guru</label>
+      <input id="inPin" type="password" inputmode="numeric" autocomplete="off" placeholder="Masukkan PIN"></div>
+    </div>
+    <div class="errbox" id="pinErr" hidden>PIN salah. Coba lagi.</div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="ghost" id="btnPinCancel" type="button">Batal</button>
+      <button class="primary" id="btnPinOk" type="button" style="width:auto">Buka panel</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODAL PENGATURAN + PANDUAN ===== -->
 <div class="modal-backdrop" id="modalSettings" hidden>
   <div class="modal">
-    <h3>⚙️ Pengaturan Guru &amp; Panduan Koneksi Spreadsheet</h3>
+    <h3>🛠️ Panel Admin — Koneksi Google Spreadsheet &amp; Pengaturan</h3>
     <div class="form">
       <div><label for="cfgUrl">URL Web App Apps Script (berakhiran /exec)</label>
-      <input id="cfgUrl" placeholder="https://script.google.com/macros/s/AKfycbyvlPCQ2yumufrgKTFq7rLW_Wwyw8-hevtc_eeOaDTLNUs9IAeoVbg-iyS6NODtjEU/exec"></div>
+      <input id="cfgUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
       <div><label for="cfgDurasi">Durasi pengerjaan (menit, isi 0 = tanpa batas waktu)</label>
       <input id="cfgDurasi" type="number" min="0" max="600" step="1"></div>
+      <div><label for="cfgJumlahPG">Jumlah soal PG per siswa (5–20; 20 = semua soal dari bank)</label>
+      <input id="cfgJumlahPG" type="number" min="5" max="20" step="1"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="checkbox" id="cfgAcakUrutan" style="width:auto">
+        <label for="cfgAcakUrutan" style="margin:0">Acak <b>urutan soal</b> per siswa (PG, rumpang, dan esai diacak dalam bagiannya masing-masing)</label>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="checkbox" id="cfgAcakOpsi" style="width:auto">
+        <label for="cfgAcakOpsi" style="margin:0">Acak <b>urutan pilihan jawaban</b> (A–E) setiap soal PG per siswa</label>
+      </div>
       <div style="display:flex;gap:8px;align-items:center">
         <input type="checkbox" id="cfgBahasan" style="width:auto">
         <label for="cfgBahasan" style="margin:0">Tampilkan pembahasan &amp; skor kepada siswa setelah mengumpulkan</label>
       </div>
+      <p class="hint">Jika jumlah PG &lt; 20, soal dipilih <b>berstrata</b> (proporsi mudah 30%, sedang 50%, sulit 20% tetap terjaga) dan skor PG otomatis diskalakan ke 60. Set soal setiap siswa tercatat di kolom “Set Soal” pada spreadsheet. Perubahan berlaku untuk pengerjaan baru.</p>
     </div>
     <div class="btnrow" style="justify-content:flex-start">
       <button class="primary" id="btnCfgSave" type="button" style="width:auto">💾 Simpan pengaturan</button>
@@ -229,13 +256,35 @@ ol.steps li{margin:6px 0}
     </div>
     <div id="cfgStatus" style="margin-top:8px"></div>
     <details open>
-      <summary>📋 Langkah menghubungkan jawaban ke Google Spreadsheet (5 langkah)</summary>
+      <summary>📤 Jawaban tertunda di perangkat ini</summary>
+      <div id="pendingInfo" style="margin:6px 0"></div>
+      <div class="btnrow" style="justify-content:flex-start">
+        <button class="ghost" id="btnPendingSend" type="button">🔁 Kirim ulang ke spreadsheet</button>
+        <button class="ghost" id="btnPendingCsv" type="button">⬇️ Unduh CSV</button>
+        <button class="ghost" id="btnPendingClear" type="button">🧹 Hapus data tertunda</button>
+      </div>
+    </details>
+    <details open>
+      <summary>🔑 Keamanan — PIN admin</summary>
+      <p class="hint">PIN dipakai untuk membuka panel admin ini (akses: ketuk cepat judul aplikasi 5× atau buka file dengan tambahan <span class="monospace">#admin</span> pada URL). PIN bawaan: <b>1234</b> — segera ganti.</p>
+      <div class="form" style="margin:6px 0">
+        <div><label for="newPin">PIN baru (minimal 4 karakter)</label>
+        <input id="newPin" type="password" autocomplete="new-password" placeholder="PIN baru"></div>
+      </div>
+      <div class="btnrow" style="justify-content:flex-start">
+        <button class="ghost" id="btnPinChange" type="button">🔐 Ganti PIN</button>
+      </div>
+      <div id="pinStatus" style="margin-top:6px"></div>
+    </details>
+    <details open>
+      <summary>📋 Langkah menghubungkan jawaban ke Google Spreadsheet (6 langkah)</summary>
       <ol class="steps">
         <li>Buat <b>Google Spreadsheet</b> baru di Google Drive (ketik <span class="monospace">sheets.new</span> di browser). Beri nama, misalnya <i>Nilai Latihan ASAS Kimia X</i>.</li>
         <li>Di spreadsheet itu, buka menu <b>Ekstensi → Apps Script</b>, hapus kode bawaan, lalu tempel seluruh kode dari kotak di bawah (tombol <b>Salin kode</b>). Simpan (Ctrl+S).</li>
         <li>Klik <b>Terapkan (Deploy) → Deployment baru → Aplikasi web</b>. Isi: <i>Jalankan sebagai: Saya</i> dan <i>Siapa yang memiliki akses: Siapa saja (Anyone)</i> → <b>Terapkan</b> → izinkan akses akun Google Anda. Salin <b>URL Web App</b> (berakhiran <span class="monospace">/exec</span>).</li>
-        <li>Tempel URL itu pada kolom di atas, klik <b>Simpan pengaturan</b>, lalu <b>Uji koneksi</b>. Bila muncul “API aktif”, koneksi berhasil.</li>
-        <li>Bagikan <b>file HTML ini</b> ke siswa (WhatsApp/Google Classroom). Setiap siswa yang menekan <b>Kumpulkan</b> otomatis menambah satu baris di sheet <i>“Jawaban Latihan”</i>.</li>
+        <li>Tempel URL itu pada kolom <b>URL Web App</b> di atas, klik <b>Simpan pengaturan</b>, lalu <b>Uji koneksi</b>. Bila muncul “API aktif”, koneksi berhasil.</li>
+        <li>Ganti PIN admin pada bagian <b>Keamanan</b> agar siswa tidak dapat membuka panel ini.</li>
+        <li>Bagikan <b>file HTML ini</b> ke siswa (WhatsApp/Google Classroom). Siswa tidak melihat menu pengaturan apa pun — mereka cukup mengisi nama &amp; kelas, mengerjakan, lalu menekan <b>Kumpulkan</b>; jawaban otomatis masuk sebagai satu baris di sheet <i>“Jawaban Latihan”</i> spreadsheet Anda.</li>
       </ol>
       <p class="hint">Kolom “Skor Esai Otomatis” adalah skor awal berbasis kata kunci — koreksi akhir tetap di tangan guru melalui kolom “Nilai Final Guru”. Jika ingin dibuka online tanpa unduhan, file HTML dapat di-hosting statis gratis (mis. Netlify Drop / GitHub Pages).</p>
     </details>
@@ -254,7 +303,7 @@ ol.steps li{margin:6px 0}
 
 <div id="toast" hidden></div>
 <script type="application/json" id="bank">{"judul":"Latihan ASAS Kimia Kelas X — Semester 1 (Kurikulum Merdeka)","versi":"1.0","soal":[{"id":"PG1","tipe":"pg","materi":"Langkah-langkah eksperimen (metode ilmiah)","tingkat":"mudah","poin":3,"soal":"Seorang siswa mengamati bahwa genangan air di halaman sekolah lama-kelamaan mengering. Ia kemudian menduga-duga bahwa genangan itu mengering karena air menguap akibat panas matahari. Dalam metode ilmiah, langkah yang baru saja dilakukan siswa tersebut adalah…","opsi":["Merumuskan masalah","Mengajukan hipotesis","Melakukan eksperimen","Mengolah dan menganalisis data","Menarik kesimpulan"],"kunci":"B","pembahasan":"Dugaan sementara yang masih harus diuji melalui eksperimen disebut hipotesis. Merumuskan masalah adalah tahap sebelumnya, sedangkan eksperimen dan analisis data dilakukan setelah hipotesis diajukan."},{"id":"PG2","tipe":"pg","materi":"Ilmu kimia","tingkat":"mudah","poin":3,"soal":"Pernyataan yang paling tepat menggambarkan ilmu kimia adalah…","opsi":["Ilmu yang mempelajari makhluk hidup dan lingkungannya","Ilmu yang mempelajari struktur, komposisi, sifat, dan perubahan materi beserta energi yang menyertainya","Ilmu yang mempelajari benda langit dan fenomena alam semesta","Ilmu yang hanya mempelajari zat-zat yang dibuat di laboratorium","Ilmu yang mempelajari cara kerja mesin-mesin industri"],"kunci":"B","pembahasan":"Ilmu kimia mempelajari materi (struktur, komposisi, sifat) serta perubahan dan energi yang menyertainya. Makhluk hidup dipelajari biologi, benda langit dipelajari astronomi."},{"id":"PG3","tipe":"pg","materi":"Simbol zat kimia","tingkat":"mudah","poin":3,"soal":"Lambang unsur tembaga yang benar adalah…","opsi":["Co","Cu","Ca","Cr","Cb"],"kunci":"B","pembahasan":"Tembaga (cuprum) dilambangkan Cu. Co = kobalt, Ca = kalsium, Cr = kromium, sedangkan Cb bukan lambang unsur yang sah."},{"id":"PG4","tipe":"pg","materi":"Alat-alat laboratorium (fungsi)","tingkat":"mudah","poin":3,"soal":"Fungsi gelas kimia (beaker) di laboratorium adalah…","opsi":["Mengukur volume zat cair dengan ketelitian tinggi","Menampung zat cair, mengukur volume secara kasar, dan memanaskan larutan","Memisahkan dua cairan yang tidak saling bercampur","Mengeringkan benda kimia dengan bantuan zat penyerap air","Memindahkan cairan tetes demi tetes"],"kunci":"B","pembahasan":"Volume dengan ketelitian tinggi diukur dengan pipet/buret; pemisahan cairan tak bercampur memakai corong pisah; pengeringan memakai desikator; tetes demi tetes memakai pipet tetes."},{"id":"PG5","tipe":"pg","materi":"Tata tertib laboratorium","tingkat":"mudah","poin":3,"soal":"Tindakan siswa yang SESUAI dengan tata tertib di laboratorium adalah…","opsi":["Membawa makanan dan minuman ke dalam ruang laboratorium","Membuang sisa bahan kimia langsung ke dalam wastafel","Mengenakan jas lab dan membaca langkah kerja sebelum praktikum dimulai","Menghirup langsung bau larutan dengan mendekatkan hidung ke mulut wadah","Bermain-main dengan alat dan bahan saat praktikum berlangsung"],"kunci":"C","pembahasan":"Tata tertib: kenakan jas lab, baca langkah kerja, jangan makan/minum, limbah dibuang pada wadah khusus, dan bau diendapkan dengan mengaibkan tangan (wafting), bukan dihirup langsung."},{"id":"PG6","tipe":"pg","materi":"Manfaat ilmu kimia di berbagai bidang","tingkat":"mudah","poin":3,"soal":"Contoh penerapan ilmu kimia di bidang kedokteran/kesehatan adalah…","opsi":["Pembuatan pupuk dan pestisida untuk pertanian","Pembuatan bahan bakar nabati (biodiesel)","Pembuatan obat-obatan dan bahan antiseptik","Pembuatan aplikasi komputer dan jaringan internet","Pembuatan peta wilayah dan citra satelit"],"kunci":"C","pembahasan":"Bidang kesehatan: sintesis obat, antiseptik, dan bahan medis. Pupuk/pestisida = bidang pertanian; biodiesel = bidang energi; aplikasi komputer = bidang informatika."},{"id":"PG7","tipe":"pg","materi":"Langkah-langkah eksperimen (metode ilmiah)","tingkat":"sedang","poin":3,"soal":"Urutan langkah metode ilmiah yang benar adalah…","opsi":["Perumusan masalah → pengajuan hipotesis → perancangan dan pelaksanaan eksperimen → pengolahan dan analisis data → penarikan kesimpulan","Pengajuan hipotesis → perumusan masalah → penarikan kesimpulan → eksperimen → analisis data","Pelaksanaan eksperimen → perumusan masalah → pengajuan hipotesis → penarikan kesimpulan → analisis data","Perumusan masalah → pelaksanaan eksperimen → pengajuan hipotesis → penarikan kesimpulan → analisis data","Analisis data → pengajuan hipotesis → perumusan masalah → eksperimen → penarikan kesimpulan"],"kunci":"A","pembahasan":"Metode ilmiah: merumuskan masalah → mengajukan hipotesis → merancang dan melakukan eksperimen → mengolah/menganalisis data → menarik kesimpulan (lalu mengomunikasikan)."},{"id":"PG8","tipe":"pg","materi":"Alat-alat laboratorium (spesifikasi)","tingkat":"sedang","poin":3,"soal":"Dalam titrasi asam–basa, alat yang paling tepat untuk menampung dan mengukur volume larutan yang ditambahkan sampai titik akhir titrasi adalah…","opsi":["Pipet tetes","Buret","Gelas kimia","Corong pisah","Tabung reaksi"],"kunci":"B","pembahasan":"Buret dilengkapi kran sehingga larutan dapat dikeluarkan secukupnya dengan ketelitian tinggi (skala 0,1 mL atau lebih halus). Gelas kimia hanya untuk pengukuran kasar."},{"id":"PG9","tipe":"pg","materi":"Prinsip-prinsip kimia hijau","tingkat":"sedang","poin":3,"soal":"Sebuah industri tekstil merancang proses pewarnaan kain sehingga tidak menghasilkan limbah cair berbahaya sejak awal produksi. Prinsip kimia hijau yang diterapkan adalah…","opsi":["Penggunaan katalis, bukan pereaksi stoikiometri","Pencegahan limbah (waste prevention)","Desain produk agar mudah terdegradasi","Analisis waktu nyata untuk mencegah polusi","Penggunaan bahan baku yang dapat diperbarui"],"kunci":"B","pembahasan":"Mencegah terbentuknya limbah sejak awal proses adalah prinsip pertama kimia hijau (pencegahan limbah), jauh lebih baik daripada mengolah limbah setelah terbentuk."},{"id":"PG10","tipe":"pg","materi":"Prinsip-prinsip kimia hijau","tingkat":"sedang","poin":3,"soal":"Salah satu prinsip kimia hijau adalah mengutamakan penggunaan katalis. Alasan yang tepat untuk prinsip tersebut adalah…","opsi":["Katalis habis bereaksi sehingga tidak menyisakan limbah","Katalis mempercepat reaksi, meningkatkan selektivitas produk, dan menurunkan kebutuhan energi","Katalis hanya dapat digunakan untuk reaksi di laboratorium kecil","Katalis meningkatkan jumlah energi yang diperlukan dalam reaksi","Katalis membuat reaksi berlangsung tanpa menghasilkan produk samping sama sekali"],"kunci":"B","pembahasan":"Katalis tidak ikut habis, mempercepat reaksi, menaikkan selektivitas (sedikit produk samping), dan memungkinkan reaksi berjalan pada suhu lebih rendah sehingga hemat energi."},{"id":"PG11","tipe":"pg","materi":"Perkembangan teori atom","tingkat":"sedang","poin":3,"soal":"Percobaan menembakkan partikel alfa ke lempeng emas yang menghasilkan kesimpulan bahwa atom memiliki inti yang sangat kecil, bermassa besar, dan bermuatan positif dilakukan oleh…","opsi":["John Dalton","J.J. Thomson","E. Rutherford","Niels Bohr","J. Chadwick"],"kunci":"C","pembahasan":"Percobaan lempeng emas Rutherford (1911): mayoritas partikel alfa menembus, sebagian kecil dibelokkan → ada inti kecil padat bermuatan positif."},{"id":"PG12","tipe":"pg","materi":"Perkembangan teori atom","tingkat":"sedang","poin":3,"soal":"Kelemahan model atom Bohr yang kemudian disempurnakan oleh teori mekanika kuantum adalah…","opsi":["Menyatakan atom sebagai bola bermuatan positif dengan elektron tersebar di permukaannya","Tidak dapat menjelaskan spektrum atom yang memiliki lebih dari satu elektron (atom polielektron)","Menganggap inti atom tidak bermuatan listrik","Tidak menempatkan elektron di sekitar inti atom","Menyatakan elektron dan proton berada bersama di dalam inti"],"kunci":"B","pembahasan":"Model Bohr berhasil menjelaskan spektrum atom hidrogen, tetapi gagal untuk atom polielektron; mekanika kuantum (Schrödinger) memperkenalkan konsep orbital probabilistik."},{"id":"PG13","tipe":"pg","materi":"Proton, elektron, neutron","tingkat":"sedang","poin":3,"soal":"Atom aluminium memiliki nomor atom 13 dan nomor massa 27. Jumlah proton, neutron, dan elektron pada atom aluminium netral berturut-turut adalah…","opsi":["13, 14, dan 13","13, 13, dan 14","14, 13, dan 13","13, 27, dan 13","27, 13, dan 27"],"kunci":"A","pembahasan":"p = Z = 13; n = A − Z = 27 − 13 = 14; e = p = 13 karena atom netral."},{"id":"PG14","tipe":"pg","materi":"Konfigurasi elektron","tingkat":"sedang","poin":3,"soal":"Konfigurasi elektron atom unsur dengan nomor atom 20 adalah…","opsi":["2, 8, 8, 2","2, 8, 10","2, 8, 9, 1","2, 7, 8, 3","2, 8, 8, 8"],"kunci":"A","pembahasan":"20 elektron terdistribusi pada kulit K(2), L(8), M(8), N(2). Kulit K maksimal 2, L maksimal 8."},{"id":"PG15","tipe":"pg","materi":"Elektron valensi","tingkat":"sedang","poin":3,"soal":"Unsur bromin (Z = 35) memiliki konfigurasi elektron 2, 8, 18, 7. Elektron valensi unsur bromin berjumlah…","opsi":["2","8","18","7","35"],"kunci":"D","pembahasan":"Elektron valensi adalah elektron pada kulit terluar (kulit ke-4) = 7. Jumlah 35 adalah nomor atom, bukan elektron valensi."},{"id":"PG16","tipe":"pg","materi":"Nanoteknologi","tingkat":"sedang","poin":3,"soal":"Pernyataan yang paling tepat tentang nanoteknologi adalah…","opsi":["Teknologi yang mengolah materi pada skala atom dan molekul (sekitar 1–100 nanometer) untuk menghasilkan material dengan sifat yang lebih baik","Teknologi yang mengolah material berukuran milimeter hingga sentimeter","Teknologi yang memanfaatkan reaksi nuklir untuk menghasilkan listrik","Teknologi yang hanya dapat diterapkan pada bidang kedokteran gigi","Teknologi yang mempelajari struktur batuan penyusun kerak bumi"],"kunci":"A","pembahasan":"Nano = 10⁻⁹ m. Nanoteknologi bekerja pada skala 1–100 nm, contohnya pelapis antibakteri, tabir surya berbasis partikel nano, dan pengemas pangan pintar."},{"id":"PG17","tipe":"pg","materi":"Nomor atom, nomor massa, isotop–isobar–isoton","tingkat":"sulit","poin":3,"soal":"Perhatikan notasi lima atom berikut: ₁₆³²P, ₁₆³⁴Q, ₂₀⁴⁰R, ₁₈³⁸S, dan ₁₉⁴¹T. Pasangan atom yang merupakan isoton (jumlah neutron sama) adalah…","opsi":["P dan Q","P dan R","Q dan S","R dan S","S dan T"],"kunci":"D","pembahasan":"Jumlah neutron N = A − Z: P = 16, Q = 18, R = 20, S = 20, T = 22. R dan S sama-sama memiliki 20 neutron → isoton. P dan Q adalah isotop (Z sama)."},{"id":"PG18","tipe":"pg","materi":"Proton, elektron, neutron (ion)","tingkat":"sulit","poin":3,"soal":"Ion Al³⁺ (nomor atom 13, nomor massa 27) mengandung proton, neutron, dan elektron berturut-turut sebanyak…","opsi":["13, 14, dan 10","13, 14, dan 13","13, 14, dan 16","10, 14, dan 13","13, 27, dan 10"],"kunci":"A","pembahasan":"Muatan +3 berarti kehilangan 3 elektron: e = 13 − 3 = 10. Proton dan neutron tidak berubah: p = 13, n = 27 − 13 = 14."},{"id":"PG19","tipe":"pg","materi":"Golongan dan periode","tingkat":"sulit","poin":3,"soal":"Unsur X memiliki konfigurasi elektron 1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁴. Dalam sistem periodik modern, unsur X terletak pada…","opsi":["Golongan IIA, periode 4","Golongan IVA, periode 4","Golongan VIA, periode 4","Golongan VIA, periode 3","Golongan VIIIA, periode 4"],"kunci":"C","pembahasan":"Kulit terbesar n = 4 → periode 4. Elektron valensi 4s²4p⁴ berjumlah 6 → golongan VIA. Blok p ditentukan dari elektron pada subkulit p terluar."},{"id":"PG20","tipe":"pg","materi":"Sifat-sifat keperiodikan unsur","tingkat":"sulit","poin":3,"soal":"Diketahui unsur ₃X, ₁₁Y, dan ₁₉Z yang berada pada golongan yang sama. Urutan jari-jari atom dari yang TERBESAR adalah…","opsi":["X > Y > Z","Y > X > Z","Z > Y > X","Z > X > Y","X > Z > Y"],"kunci":"C","pembahasan":"Dalam satu golongan, makin ke bawah jumlah kulit elektron bertambah sehingga jari-jari atom makin besar: Z (Z=19) > Y (Z=11) > X (Z=3)."},{"id":"R1","tipe":"rumpang","materi":"Tata tertib laboratorium","tingkat":"mudah","poin":4,"soal":"Lengkapi kalimat berikut! Sebelum meninggalkan laboratorium, siswa wajib mencuci {{1}} dengan air dan sabun, lalu merapikan alat dan mengembalikan bahan pada tempatnya.","jawaban":[{"terima":["tangan","tgn","tangannya","kedua tangan"]}],"pembahasan":"Kebersihan diri wajib dijaga setelah praktikum: cuci tangan sampai bersih. Alat dicuci dan dikembalikan, sisa bahan dibuang ke wadah limbah yang ditentukan, bukan ke wastafel."},{"id":"R2","tipe":"rumpang","materi":"Simbol zat kimia","tingkat":"mudah","poin":4,"soal":"Lengkapi lambang unsur berikut! Lambang unsur besi adalah {{1}} dan lambang unsur natrium adalah {{2}}.","jawaban":[{"terima":["fe"]},{"terima":["na"]}],"pembahasan":"Besi (ferrum) dilambangkan Fe; natrium dilambangkan Na. Penulisan lambang unsur: huruf pertama kapital, huruf kedua (jika ada) huruf kecil."},{"id":"R3","tipe":"rumpang","materi":"Kimia hijau: sumber dapat / tidak dapat diperbarui","tingkat":"sedang","poin":4,"soal":"Lengkapi kalimat berikut! Biodiesel dan biogas merupakan contoh sumber energi kimia yang dapat {{1}}, sedangkan minyak bumi dan batu bara merupakan sumber energi yang tidak dapat diperbarui.","jawaban":[{"terima":["diperbarui","diperbaharui","perbarui","terbarukan"]}],"pembahasan":"Biodiesel dan biogas dibuat dari biomassa (bahan baku terbarukan). Sumber energi dapat diperbarui: biomassa, air, angin, sinar matahari. Tidak dapat diperbarui: minyak bumi, batu bara, dan gas alam (bahan fosil)."},{"id":"R4","tipe":"rumpang","materi":"Nomor atom, nomor massa, isotop–isobar–isoton","tingkat":"sedang","poin":4,"soal":"Atom klorin memiliki notasi ₁₇³⁵Cl. Jumlah neutron pada atom klorin tersebut sebanyak {{1}}.","jawaban":[{"terima":["18","18 neutron","delapan belas"]}],"pembahasan":"Jumlah neutron = A − Z = 35 − 17 = 18. Nomor atom 17 juga berarti jumlah proton (dan elektron pada atom netral) = 17."},{"id":"R5","tipe":"rumpang","materi":"Golongan dan periode","tingkat":"sulit","poin":4,"soal":"Unsur X memiliki konfigurasi elektron 1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p³. Unsur X terletak pada golongan {{1}} dan periode {{2}}.","jawaban":[{"terima":["va","5a","v a","golongan va","gol va","5"]},{"terima":["4","empat"]}],"pembahasan":"Kulit terbesar n = 4 → periode 4. Elektron valensi 4s²4p³ berjumlah 5 dengan elektron terakhir pada subkulit p → golongan VA (blok p)."},{"id":"E1","tipe":"esai","materi":"Manfaat ilmu kimia","tingkat":"mudah","poin":4,"soal":"Ilmu kimia memberikan manfaat besar dalam kehidupan sehari-hari. Jelaskan manfaat ilmu kimia di bidang kesehatan/kedokteran dan di bidang pangan, dan berikan masing-masing satu contoh nyata! Jawab singkat dan jelas (2–5 kalimat).","rubrik":[{"label":"Manfaat di bidang kesehatan/kedokteran disebutkan","poin":1,"butir":1,"kata":[["obat","kedokteran","kesehatan","farmasi","pengobatan","antiseptik"]]},{"label":"Contoh nyata di bidang kesehatan","poin":1,"butir":1,"kata":[["paracetamol","parasetamol","antiseptik","sirup","salep","vaksin","povidon","iodin","peroksida"]]},{"label":"Manfaat di bidang pangan disebutkan","poin":1,"butir":1,"kata":[["pangan","makanan","pengawet","pewarna","pengental","pemanis","minuman","gizi"]]},{"label":"Contoh nyata di bidang pangan","poin":1,"butir":1,"kata":[["benzoat","pengawet","pewarna","pengental","pemanis","aspartam","monosodium","msg","karagenan","sorbit","tartrazin"]]}],"kunci":"Contoh jawaban: Di bidang kesehatan, ilmu kimia digunakan untuk merancang dan mensintesis obat, misalnya parasetamol sebagai penurun demam, serta bahan antiseptik seperti povidon iodin untuk merawat luka. Di bidang pangan, ilmu kimia dimanfaatkan untuk mengembangkan bahan tambahan pangan seperti pengawet (natrium benzoat), pengental, dan pemanis buatan sehingga makanan lebih tahan lama, aman, dan bervariasi."},{"id":"E2","tipe":"esai","materi":"Peran kimia hijau","tingkat":"sedang","poin":4,"soal":"Jelaskan peran kimia hijau (green chemistry) dalam menjaga kelestarian lingkungan! Sertakan dua prinsip kimia hijau beserta contoh penerapannya! Jawab singkat dan jelas (3–6 kalimat).","rubrik":[{"label":"Peran mengurangi limbah/pencemaran dijelaskan","poin":1,"butir":1,"kata":[["limbah","pencemaran","polutan","polusi","lingkungan"]]},{"label":"Dua prinsip kimia hijau disebut","poin":2,"butir":2,"kata":[["pencegahan limbah","waste prevention"],["atom ekonomi"],["sintesis","senyawa aman","less hazardous","bahan kimia yang aman"],["pelarut","adjuvan"],["efisiensi energi","hemat energi"],["terbarukan","bahan baku"],["derivat","turunan"],["katalis"],["degradasi","terdegradasi","terbiodegradasi"],["waktu nyata","real time","analisis dalam proses"],["kecelakaan","risiko","aman"]]},{"label":"Contoh penerapan diberikan","poin":1,"butir":1,"kata":[["contoh","misalnya","misal","seperti"]]}],"kunci":"Contoh jawaban: Kimia hijau berperan mengurangi pencemaran karena proses dan produk kimia dirancang menghasilkan sedikit atau bahkan tanpa limbah berbahaya. Prinsip pencegahan limbah, misalnya industri merancang reaksi yang tidak menghasilkan produk samping beracun. Prinsip penggunaan katalis, misalnya industri memakai katalis agar reaksi berlangsung pada suhu lebih rendah sehingga hemat energi. Prinsip pelarut lebih aman, misalnya mengganti pelarut beracun dengan air."},{"id":"E3","tipe":"esai","materi":"Perkembangan teori atom","tingkat":"sedang","poin":4,"soal":"Jelaskan perbedaan antara model atom Rutherford dan model atom Bohr! Tuliskan pula kelebihan model atom Bohr dibandingkan model Rutherford! Jawab singkat dan jelas (3–6 kalimat).","rubrik":[{"label":"Model Rutherford dijelaskan (inti positif, elektron mengelilingi)","poin":1,"butir":2,"kata":[["inti","nukleus","pusat"],["positif"],["mengelilingi","mengorbit","berputar"]]},{"label":"Kelemahan Rutherford disebut","poin":1,"butir":1,"kata":[["memancarkan energi","jatuh ke inti","tidak stabil","spektrum kontinu","menyusut","swafosfor"]]},{"label":"Model Bohr dijelaskan (orbit / tingkat energi tertentu)","poin":1,"butir":1,"kata":[["orbit","lintasan tertentu","tingkat energi","stasioner","stationer","energi tertentu"]]},{"label":"Kelebihan Bohr disebut","poin":1,"butir":1,"kata":[["spektrum garis","spektrum hidrogen","diskrit","spektrum atom"]]}],"kunci":"Contoh jawaban: Model Rutherford menyatakan atom terdiri atas inti yang sangat kecil bermuatan positif dengan elektron yang mengelilinginya. Kelemahannya, menurut fisika klasik elektron yang berputar akan memancarkan energi terus-menerus sehingga akhirnya jatuh ke inti (atom tidak stabil) dan spektrum yang dihasilkan seharusnya kontinu. Model Bohr menyempurnakannya dengan menyatakan elektron hanya bergerak pada lintasan (orbit) dengan tingkat energi tertentu. Kelebihan model Bohr adalah dapat menjelaskan spektrum garis (diskrit) atom hidrogen."},{"id":"E4","tipe":"esai","materi":"Konfigurasi elektron, elektron valensi, mekanika kuantum","tingkat":"sulit","poin":4,"soal":"Tuliskan konfigurasi elektron atom seng (Zn, nomor atom 30) dengan sistem orbital/subkulit, tentukan jumlah elektron valensinya, dan jelaskan salah satu kontribusi teori mekanika kuantum terhadap perkembangan model atom! Jawab singkat dan jelas.","rubrik":[{"label":"Konfigurasi elektron dituliskan","poin":2,"butir":6,"kata":[["1s2"],["2s2"],["2p6"],["3s2"],["3p6"],["3d10"],["4s2"]]},{"label":"Elektron valensi ditentukan (2, pada 4s²)","poin":1,"butir":1,"kata":[["valensi 2","valensi: 2","valensi = 2","valensinya 2","valensinya = 2","valensi dua","dua elektron valensi","2 elektron valensi"]]},{"label":"Kontribusi mekanika kuantum dijelaskan","poin":1,"butir":1,"kata":[["orbital","awan elektron","probabilitas","peluang","ketidakpastian","heisenberg","de broglie","gelombang partikel","subkulit","bentuk orbital","spdf","s p d f"]]}],"kunci":"Contoh jawaban: Konfigurasi elektron Zn (Z = 30): 1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s². Elektron valensinya 2, yaitu elektron pada kulit terluar (4s²). Kontribusi mekanika kuantum: elektron tidak lagi dianggap bergerak pada lintasan pasti, melainkan berada pada orbital sebagai daerah dengan peluang (probabilitas) terbesar ditemukannya elektron. Konsep ini (bersama asas ketidakpastian Heisenberg dan dualisme gelombang–partikel de Broglie) menjelaskan spektrum atom polielektron yang tidak dapat dijelaskan model Bohr."},{"id":"E5","tipe":"esai","materi":"Golongan dan periode","tingkat":"sedang","poin":4,"soal":"Unsur X memiliki nomor atom 16. Tentukan konfigurasi elektron, periode, dan golongan unsur X dalam sistem periodik modern, serta jelaskan secara singkat cara menentukannya! Jawab singkat dan jelas.","rubrik":[{"label":"Konfigurasi elektron dituliskan","poin":2,"butir":4,"kata":[["1s2"],["2s2"],["2p6"],["3s2"],["3p4"]]},{"label":"Periode ditentukan (3)","poin":1,"butir":1,"kata":[["periode 3","periode ketiga","periode ke-3","periode ke 3"]]},{"label":"Golongan ditentukan (VIA)","poin":1,"butir":1,"kata":[["via","6a","golongan 6","golongan 16"]]}],"kunci":"Contoh jawaban: Konfigurasi elektron unsur Z = 16 (sulfur): 1s² 2s² 2p⁶ 3s² 3p⁴. Periode ditentukan dari nomor kulit elektron terbesar, yaitu n = 3, sehingga unsur berada pada periode 3. Golongan ditentukan dari elektron valensi 3s² 3p⁴ yang berjumlah 6 (elektron terakhir pada subkulit p), sehingga unsur berada pada golongan VIA."}]}</script>
-<script>window.__GS_CODE__ = "/**\n * ============================================================\n *  KODE GOOGLE APPS SCRIPT — PENERIMA JAWABAN\n *  Latihan ASAS Kimia Kelas X — Semester 1 (Kurikulum Merdeka)\n * ============================================================\n *  CARA PASANG:\n *  1. Buat Google Spreadsheet baru (di Google Drive) untuk menampung nilai.\n *  2. Di spreadsheet itu, buka menu: Ekstensi (Extensions) -> Apps Script.\n *  3. Hapus kode bawaan, tempel SELURUH kode ini, lalu simpan (Ctrl+S).\n *  4. Klik: Terapkan (Deploy) -> Deployment baru -> jenis \"Aplikasi web\".\n *     - Deskripsi        : bebas, mis. \"Penerima jawaban latihan\"\n *     - Jalankan sebagai  : Saya (Me)\n *     - Siapa yang punya akses: Siapa saja (Anyone)\n *  5. Klik \"Terapkan\", izinkan akses akun Google, lalu SALIN URL Web App\n *     (berakhiran /exec).\n *  6. Tempel URL itu di panel \"Pengaturan\" aplikasi latihan, lalu klik\n *     \"Uji koneksi\".\n *\n *  Setiap siswa yang menekan tombol \"Kumpulkan\" akan otomatis menambah\n *  SATU BARIS baru pada sheet \"Jawaban Latihan\" di spreadsheet ini.\n * ============================================================\n */\n\nvar SHEET_NAME = 'Jawaban Latihan';\n\n// Urutan kolom pada sheet. Aplikasi mengirim payload dengan kunci yang sama.\nvar HEADERS = [\n  'Timestamp', 'Nama', 'Kelas', 'No. Absen',\n  'Waktu Mulai', 'Waktu Selesai', 'Durasi Pengerjaan',\n  'Skor PG (maks 60)', 'Skor Rumpang (maks 20)', 'Skor Esai Otomatis (maks 20)',\n  'Total Otomatis (maks 100)', 'Status Koreksi',\n  'PG1', 'PG2', 'PG3', 'PG4', 'PG5', 'PG6', 'PG7', 'PG8', 'PG9', 'PG10',\n  'PG11', 'PG12', 'PG13', 'PG14', 'PG15', 'PG16', 'PG17', 'PG18', 'PG19', 'PG20',\n  'R1', 'R2', 'R3', 'R4', 'R5',\n  'E1', 'E2', 'E3', 'E4', 'E5',\n  'Nilai Final Guru', 'Catatan Guru'\n];\n\n// Untuk pengecekan koneksi dari aplikasi (tombol \"Uji koneksi\").\nfunction doGet(e) {\n  return json_({ ok: true, message: 'API aktif — siap menerima jawaban.' });\n}\n\n// Menerima jawaban dari aplikasi dan menambahkan satu baris ke sheet.\nfunction doPost(e) {\n  var lock = LockService.getScriptLock();\n  try {\n    lock.waitLock(20000); // hindari tabrakan saat banyak siswa mengumpulkan bersamaan\n    if (!e || !e.postData || !e.postData.contents) {\n      return json_({ ok: false, error: 'Data kosong tidak diterima.' });\n    }\n    var data = JSON.parse(e.postData.contents);\n    var ss = SpreadsheetApp.getActiveSpreadsheet();\n    var sh = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);\n\n    // Buat baris judul (header) sekali saja.\n    if (sh.getLastRow() === 0) {\n      sh.appendRow(HEADERS);\n      var head = sh.getRange(1, 1, 1, HEADERS.length);\n      head.setFontWeight('bold').setFontColor('#ffffff').setBackground('#166534');\n      sh.setFrozenRows(1);\n    }\n\n    // Susun satu baris jawaban sesuai urutan kolom.\n    var row = HEADERS.map(function (h) {\n      if (h === 'Timestamp') return new Date();\n      if (h === 'Nilai Final Guru' || h === 'Catatan Guru') return '';\n      var v = data[h];\n      return (v === undefined || v === null) ? '' : v;\n    });\n    sh.appendRow(row);\n\n    return json_({ ok: true, message: 'Jawaban tersimpan pada baris ' + sh.getLastRow() + '.' });\n  } catch (err) {\n    return json_({ ok: false, error: String(err) });\n  } finally {\n    try { lock.releaseLock(); } catch (ignored) {}\n  }\n}\n\nfunction json_(obj) {\n  return ContentService.createTextOutput(JSON.stringify(obj))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n";
+<script>window.__GS_CODE__ = "/**\n * ============================================================\n *  KODE GOOGLE APPS SCRIPT — PENERIMA JAWABAN\n *  Latihan ASAS Kimia Kelas X — Semester 1 (Kurikulum Merdeka)\n * ============================================================\n *  CARA PASANG:\n *  1. Buat Google Spreadsheet baru (di Google Drive) untuk menampung nilai.\n *  2. Di spreadsheet itu, buka menu: Ekstensi (Extensions) -> Apps Script.\n *  3. Hapus kode bawaan, tempel SELURUH kode ini, lalu simpan (Ctrl+S).\n *  4. Klik: Terapkan (Deploy) -> Deployment baru -> jenis \"Aplikasi web\".\n *     - Deskripsi        : bebas, mis. \"Penerima jawaban latihan\"\n *     - Jalankan sebagai  : Saya (Me)\n *     - Siapa yang punya akses: Siapa saja (Anyone)\n *  5. Klik \"Terapkan\", izinkan akses akun Google, lalu SALIN URL Web App\n *     (berakhiran /exec).\n *  6. Tempel URL itu di panel \"Pengaturan\" aplikasi latihan, lalu klik\n *     \"Uji koneksi\".\n *\n *  Setiap siswa yang menekan tombol \"Kumpulkan\" akan otomatis menambah\n *  SATU BARIS baru pada sheet \"Jawaban Latihan\" di spreadsheet ini.\n * ============================================================\n */\n\nvar SHEET_NAME = 'Jawaban Latihan';\n\n// Urutan kolom pada sheet. Aplikasi mengirim payload dengan kunci yang sama.\nvar HEADERS = [\n  'Timestamp', 'Nama', 'Kelas', 'No. Absen',\n  'Waktu Mulai', 'Waktu Selesai', 'Durasi Pengerjaan',\n  'Skor PG (maks 60)', 'Skor Rumpang (maks 20)', 'Skor Esai Otomatis (maks 20)',\n  'Total Otomatis (maks 100)', 'Status Korreksi',\n  // Deskripsi set soal siswa, mis. \"PG 15/20 · urutan acak · opsi acak · soal: PG3,PG7,...\"\n  'Set Soal',\n  'PG1', 'PG2', 'PG3', 'PG4', 'PG5', 'PG6', 'PG7', 'PG8', 'PG9', 'PG10',\n  'PG11', 'PG12', 'PG13', 'PG14', 'PG15', 'PG16', 'PG17', 'PG18', 'PG19', 'PG20',\n  'R1', 'R2', 'R3', 'R4', 'R5',\n  'E1', 'E2', 'E3', 'E4', 'E5',\n  'Nilai Final Guru', 'Catatan Guru'\n];\n\n// Untuk pengecekan koneksi dari aplikasi (tombol \"Uji koneksi\").\nfunction doGet(e) {\n  return json_({ ok: true, message: 'API aktif — siap menerima jawaban.' });\n}\n\n// Menerima jawaban dari aplikasi dan menambahkan satu baris ke sheet.\nfunction doPost(e) {\n  var lock = LockService.getScriptLock();\n  try {\n    lock.waitLock(20000); // hindari tabrakan saat banyak siswa mengumpulkan bersamaan\n    if (!e || !e.postData || !e.postData.contents) {\n      return json_({ ok: false, error: 'Data kosong tidak diterima.' });\n    }\n    var data = JSON.parse(e.postData.contents);\n    var ss = SpreadsheetApp.getActiveSpreadsheet();\n    var sh = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);\n\n    // Buat baris judul (header) sekali saja.\n    if (sh.getLastRow() === 0) {\n      sh.appendRow(HEADERS);\n      var head = sh.getRange(1, 1, 1, HEADERS.length);\n      head.setFontWeight('bold').setFontColor('#ffffff').setBackground('#166534');\n      sh.setFrozenRows(1);\n    }\n\n    // Susun satu baris jawaban sesuai urutan kolom.\n    var row = HEADERS.map(function (h) {\n      if (h === 'Timestamp') return new Date();\n      if (h === 'Nilai Final Guru' || h === 'Catatan Guru') return '';\n      var v = data[h];\n      return (v === undefined || v === null) ? '' : v;\n    });\n    sh.appendRow(row);\n\n    return json_({ ok: true, message: 'Jawaban tersimpan pada baris ' + sh.getLastRow() + '.' });\n  } catch (err) {\n    return json_({ ok: false, error: String(err) });\n  } finally {\n    try { lock.releaseLock(); } catch (ignored) {}\n  }\n}\n\nfunction json_(obj) {\n  return ContentService.createTextOutput(JSON.stringify(obj))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n";
 'use strict';
 /* ================= DATA & KONFIG ================= */
 var BANK = JSON.parse(document.getElementById('bank').textContent);
@@ -269,7 +318,7 @@ function lsLoad(key) { try { return JSON.parse(localStorage.getItem(key)); } cat
 function lsSave(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
 function lsDel(key) { try { localStorage.removeItem(key); } catch (e) {} }
 
-var cfg = lsLoad(LS_CFG) || { url: '', durasi: 90, pembahasan: true };
+var cfg = Object.assign({ url: '', durasi: 90, pembahasan: true, acakUrutan: true, acakOpsi: true, jumlahPG: 20 }, lsLoad(LS_CFG) || {});
 var state = null;          // {nama,kelas,absen,mulai,answers:{id:value}}
 var submitted = false;
 var lastResult = null;     // {payload, detail, skor, sent, reason}
@@ -317,9 +366,77 @@ function show(name) {
   window.scrollTo(0, 0);
 }
 
+/* ================= RANDOMISASI PER SISWA ================= */
+/* Fisher–Yates shuffle (mengembalikan array baru bila input disalin) */
+function shuffleArr(arr) {
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+
+/* Sampling berstrata berdasar tingkat kesulitan (proporsi komposisi bank dipertahankan) */
+function sampelStrata(pool, n) {
+  var byLv = {};
+  pool.forEach(function (s) { (byLv[s.tingkat] = byLv[s.tingkat] || []).push(s); });
+  Object.keys(byLv).forEach(function (lv) { byLv[lv] = shuffleArr(byLv[lv].slice()); });
+  var want = {}, sum = 0;
+  Object.keys(byLv).forEach(function (lv) {
+    want[lv] = Math.round(byLv[lv].length / pool.length * n);
+    sum += want[lv];
+  });
+  var keys = Object.keys(want).sort(function (a, b) { return byLv[b].length - byLv[a].length; });
+  while (sum > n) {                       // buang kelebihan dari kelompok terbesar
+    var dec = false;
+    keys.forEach(function (k) { if (sum > n && want[k] > 0) { want[k]--; sum--; dec = true; } });
+    if (!dec) break;
+  }
+  keys.forEach(function (k) {             // tambah kekurangan merata
+    while (sum < n && want[k] < byLv[k].length) { want[k]++; sum++; }
+  });
+  var pick = [];
+  Object.keys(want).forEach(function (lv) { pick = pick.concat(byLv[lv].slice(0, want[lv])); });
+  if (pick.length < n) {                  // jaga-jaga bila ada kelompok kehabisan
+    var chosen = {};
+    pick.forEach(function (s) { chosen[s.id] = 1; });
+    pool.forEach(function (s) { if (pick.length < n && !chosen[s.id]) { pick.push(s); chosen[s.id] = 1; } });
+  }
+  return pick.slice(0, n);
+}
+
+/* Susun set soal untuk SATU pengerjaan: pilihan PG, urutan soal, urutan opsi.
+   Hasilnya disimpan di state agar resume/jawaban tetap konsisten dengan set yang sama. */
+function susunAttempt() {
+  var pgPool = SOAL.filter(function (s) { return s.tipe === 'pg'; });
+  var nPG = Math.min(Math.max(parseInt(cfg.jumlahPG, 10) || 20, 5), 20);
+  var pilihPG = (nPG >= 20) ? pgPool.slice() : sampelStrata(pgPool, nPG);
+  var rumpang = SOAL.filter(function (s) { return s.tipe === 'rumpang'; });
+  var esai = SOAL.filter(function (s) { return s.tipe === 'esai'; });
+  var seq = cfg.acakUrutan === false
+    ? pilihPG.concat(rumpang, esai)
+    : shuffleArr(pilihPG).concat(shuffleArr(rumpang), shuffleArr(esai));
+  state.qOrder = seq.map(function (s) { return s.id; });
+  state.optOrder = {};
+  pilihPG.forEach(function (s) {
+    state.optOrder[s.id] = (cfg.acakOpsi === false) ? [0, 1, 2, 3, 4] : shuffleArr([0, 1, 2, 3, 4]);
+  });
+  state.setInfo = {
+    nPG: nPG,
+    ids: pilihPG.map(function (s) { return s.id; }),
+    acakUrutan: cfg.acakUrutan !== false,
+    acakOpsi: cfg.acakOpsi !== false
+  };
+}
+
+function totalSoal() { return state && state.qOrder ? state.qOrder.length : 30; }
+
 /* ================= MULAI / RESUME ================= */
 function refreshStart() {
   $('#durasiInfo').textContent = cfg.durasi > 0 ? cfg.durasi : '∞';
+  var nPG = Math.min(Math.max(parseInt(cfg.jumlahPG, 10) || 20, 5), 20);
+  $('#infoJml').textContent = nPG + 10;
+  $('#infoKomposisi').textContent = nPG + '+5+5';
   var prog = lsLoad(LS_PROG);
   var box = $('#resumeBox');
   if (prog && prog.answers && !prog.done) {
@@ -327,7 +444,7 @@ function refreshStart() {
       var v = prog.answers[k]; return Array.isArray(v) ? v.some(Boolean) : !!v;
     }).length;
     $('#resumeInfo').innerHTML = 'Ditemukan pengerjaan <b>' + esc(prog.nama) + '</b> (' + esc(prog.kelas) +
-      ') dengan ' + n + '/30 soal terjawab, dimulai ' + esc(fmtDate(prog.mulai)) + '.';
+      ') dengan ' + n + '/' + (prog.qOrder ? prog.qOrder.length : 30) + ' soal terjawab, dimulai ' + esc(fmtDate(prog.mulai)) + '.';
     box.hidden = false;
   } else { box.hidden = true; }
 }
@@ -336,6 +453,7 @@ function mulaiBaru() {
   var nama = $('#inNama').value.trim(), kelas = $('#inKelas').value.trim(), absen = $('#inAbsen').value.trim();
   if (!nama || !kelas) { toast('Nama dan kelas wajib diisi ya!', true); return; }
   state = { nama: nama, kelas: kelas, absen: absen || '-', mulai: new Date().toISOString(), answers: {}, done: false };
+  susunAttempt();          // set soal acak khusus untuk siswa ini
   lsSave(LS_PROG, state);
   bukaQuiz();
 }
@@ -344,6 +462,7 @@ function lanjutkan() {
   var prog = lsLoad(LS_PROG);
   if (!prog) { toast('Tidak ada progres tersimpan.', true); return; }
   state = prog;
+  if (!state.qOrder) susunAttempt();   // progres lama (versi sebelum acak): buat set baru
   bukaQuiz();
 }
 
@@ -363,7 +482,7 @@ function bukaQuiz() {
   updateProgress();
 }
 
-function qIndex(id) { return URUTAN.indexOf(id); }
+function qIndex(id) { return state && state.qOrder ? state.qOrder.indexOf(id) : URUTAN.indexOf(id); }
 
 function renderPalette() {
   var p = $('#palette');
@@ -371,7 +490,7 @@ function renderPalette() {
   var secs = [['Bagian A · PG', 'pg'], ['Bagian B · Rumpang', 'rumpang'], ['Bagian C · Esai', 'esai']];
   secs.forEach(function (sec) {
     p.appendChild(el('span', 'psec', sec[0]));
-    SOAL.filter(function (s) { return s.tipe === sec[1]; }).forEach(function (s) {
+    state.qOrder.map(function (id) { return BY_ID[id]; }).filter(function (s) { return s.tipe === sec[1]; }).forEach(function (s) {
       var b = el('button', 'pchip', String(qIndex(s.id) + 1));
       b.type = 'button';
       b.id = 'chip-' + s.id;
@@ -403,14 +522,17 @@ function isAnswered(id) {
 function renderQuestions() {
   var wrap = $('#qList');
   wrap.innerHTML = '';
-  var secTitles = { pg: 'Bagian A — Pilihan Ganda (soal 1–20, pilih satu jawaban)',
-                    rumpang: 'Bagian B — Isian Rumpang (soal 21–25, isi bagian yang kosong)',
-                    esai: 'Bagian C — Esai Singkat (soal 26–30, jawab singkat dan jelas)' };
+  var nPG = state.setInfo.nPG;
+  var secTitles = {
+    pg: 'Bagian A — Pilihan Ganda (' + nPG + ' soal, soal 1–' + nPG + ', pilih satu jawaban)',
+    rumpang: 'Bagian B — Isian Rumpang (soal ' + (nPG + 1) + '–' + (nPG + 5) + ', isi bagian yang kosong)',
+    esai: 'Bagian C — Esai Singkat (soal ' + (nPG + 6) + '–' + (nPG + 10) + ', jawab singkat dan jelas)' };
   var lastTipe = null;
-  SOAL.forEach(function (s, i) {
+  state.qOrder.forEach(function (id, i) {
+    var s = BY_ID[id];
     if (s.tipe !== lastTipe) {
       wrap.appendChild(el('div', 'card', '<h3>' + secTitles[s.tipe] + '</h3><p class="hint">' +
-        (s.tipe === 'pg' ? 'Setiap soal PG bernilai 3 poin. Klik salah satu pilihan A–E.'
+        (s.tipe === 'pg' ? 'Soal diurutkan dan pilihan jawaban diacak khusus untukmu. Klik salah satu pilihan A–E.'
          : s.tipe === 'rumpang' ? 'Setiap soal rumpang bernilai 4 poin. Ketik jawaban pada kotak isian.'
          : 'Setiap esai bernilai 4 poin (penilaian awal berbasis kata kunci, diverifikasi guru).') + '</p>'));
       lastTipe = s.tipe;
@@ -424,12 +546,14 @@ function renderQuestions() {
     var body = el('div', 'qbody');
     if (s.tipe === 'pg') {
       body.appendChild(el('div', null, esc(s.soal)));
+      var ord = state.optOrder[s.id] || [0, 1, 2, 3, 4];
       var opts = el('div', 'opts');
-      s.opsi.forEach(function (teks, oi) {
-        var letter = 'ABCDE'[oi];
-        var btn = el('button', 'opt', '<span class="let">' + letter + '</span><span>' + esc(teks) + '</span>');
+      ord.forEach(function (bi, di) {
+        var letter = 'ABCDE'[di];
+        var btn = el('button', 'opt', '<span class="let">' + letter + '</span><span>' + esc(s.opsi[bi]) + '</span>');
         btn.type = 'button';
         btn.dataset.letter = letter;
+        btn.dataset.bankIdx = bi;
         if (state.answers[s.id] === letter) btn.classList.add('sel');
         btn.addEventListener('click', function () {
           state.answers[s.id] = letter;
@@ -517,16 +641,19 @@ function startTimer() {
 }
 
 function updateProgress() {
-  var n = SOAL.filter(function (s) { return isAnswered(s.id); }).length;
-  $('#progressText').textContent = 'Terjawab ' + n + '/30';
+  var n = 0;
+  state.qOrder.forEach(function (id) { if (isAnswered(id)) n++; });
+  $('#progressText').textContent = 'Terjawab ' + n + '/' + totalSoal();
 }
 
 
 /* ================= PENILAIAN OTOMATIS ================= */
 function skorPG(s) {
   var ans = state.answers[s.id];
-  var benar = ans === s.kunci;
-  return { skor: benar ? s.poin : 0, benar: benar };
+  var ord = (state.optOrder && state.optOrder[s.id]) || [0, 1, 2, 3, 4];
+  var di = 'ABCDE'.indexOf(ans);
+  var benar = di >= 0 && ord[di] === 'ABCDE'.indexOf(s.kunci);
+  return { skor: benar ? s.poin : 0, benar: benar };   // poin bank (3); penskalaan ke 60 dilakukan di hitungSemua
 }
 
 function skorRumpang(s) {
@@ -559,22 +686,32 @@ function skorEsai(s) {
 }
 
 function hitungSemua() {
-  var detail = [], skor = { pg: 0, rumpang: 0, esai: 0 };
-  SOAL.forEach(function (s, i) {
+  var detail = [], raw = { pg: 0, rumpang: 0, esai: 0 };
+  state.qOrder.forEach(function (id, i) {
+    var s = BY_ID[id];
     var r;
     if (s.tipe === 'pg') r = skorPG(s);
     else if (s.tipe === 'rumpang') r = skorRumpang(s);
     else r = skorEsai(s);
-    skor[s.tipe === 'pg' ? 'pg' : s.tipe === 'rumpang' ? 'rumpang' : 'esai'] += r.skor;
+    raw[s.tipe === 'pg' ? 'pg' : s.tipe === 'rumpang' ? 'rumpang' : 'esai'] += r.skor;
     detail.push({ no: i + 1, s: s, r: r, jawab: displayJawaban(s) });
   });
+  // PG selalu diskalakan ke 60: aman saat jumlah soal PG per siswa < 20 (mode acak)
+  var nPG = state.setInfo.nPG;
+  var pgSkor = Math.round(raw.pg / (3 * nPG) * 60 * 10) / 10;
+  var skor = { pg: pgSkor, rumpang: Math.round(raw.rumpang * 10) / 10, esai: Math.round(raw.esai * 10) / 10 };
   var total = Math.round(skor.pg + skor.rumpang + skor.esai);
   return { detail: detail, skor: skor, total: total, maks: { pg: 60, rumpang: 20, esai: 20 } };
 }
 
 function displayJawaban(s) {
   var v = state.answers[s.id];
-  if (s.tipe === 'pg') return v ? v + ' — ' + s.opsi['ABCDE'.indexOf(v)] : '(tidak dijawab)';
+  if (s.tipe === 'pg') {
+    if (!v) return '(tidak dijawab)';
+    var ord = (state.optOrder && state.optOrder[s.id]) || [0, 1, 2, 3, 4];
+    var bi = ord['ABCDE'.indexOf(v)];
+    return v + ' — ' + s.opsi[bi];
+  }
   if (s.tipe === 'rumpang') {
     if (!Array.isArray(v)) return '(tidak dijawab)';
     var arr = s.jawaban.map(function (j, gi) { return (v[gi] || '').trim() || '(kosong)'; });
@@ -584,24 +721,25 @@ function displayJawaban(s) {
 }
 
 function kunciDisplay(s) {
-  if (s.tipe === 'pg') return s.kunci + ' — ' + s.opsi['ABCDE'.indexOf(s.kunci)];
+  if (s.tipe === 'pg') return s.opsi['ABCDE'.indexOf(s.kunci)] + ' (kunci bank: ' + s.kunci + ')';
   if (s.tipe === 'rumpang') return s.jawaban.map(function (j) { return j.terima[0]; }).join(' | ');
   return s.kunci;
 }
 
 /* ================= PENGUMPULAN & KIRIM ================= */
 function hitungJawabanTerjawab() {
-  var kosong = SOAL.filter(function (s) { return !isAnswered(s.id); }).map(function (s) { return qIndex(s.id) + 1; });
+  var kosong = state.qOrder.filter(function (id) { return !isAnswered(id); }).map(function (id) { return qIndex(id) + 1; });
   return kosong;
 }
 
 function bukaKonfirmasi() {
   var kosong = hitungJawabanTerjawab();
-  var pgK = SOAL.filter(function (s) { return s.tipe === 'pg' && isAnswered(s.id); }).length;
-  var rK = SOAL.filter(function (s) { return s.tipe === 'rumpang' && isAnswered(s.id); }).length;
-  var eK = SOAL.filter(function (s) { return s.tipe === 'esai' && isAnswered(s.id); }).length;
+  var nPG = state.setInfo.nPG;
+  var pgK = state.qOrder.filter(function (id) { return BY_ID[id].tipe === 'pg' && isAnswered(id); }).length;
+  var rK = state.qOrder.filter(function (id) { return BY_ID[id].tipe === 'rumpang' && isAnswered(id); }).length;
+  var eK = state.qOrder.filter(function (id) { return BY_ID[id].tipe === 'esai' && isAnswered(id); }).length;
   var html = '<p><b>' + esc(state.nama) + '</b> (' + esc(state.kelas) + ')</p>' +
-    '<ul><li>PG terjawab: <b>' + pgK + '/20</b></li><li>Rumpang terjawab: <b>' + rK + '/5</b></li>' +
+    '<ul><li>PG terjawab: <b>' + pgK + '/' + nPG + '</b></li><li>Rumpang terjawab: <b>' + rK + '/5</b></li>' +
     '<li>Esai terjawab: <b>' + eK + '/5</b></li></ul>';
   if (kosong.length) {
     html += '<div class="warnbox">Masih ada <b>' + kosong.length + '</b> soal belum dijawab: nomor ' +
@@ -612,9 +750,19 @@ function bukaKonfirmasi() {
   $('#modalConfirm').hidden = false;
 }
 
+function keteranganSet() {
+  var si = state.setInfo;
+  var ket = 'PG ' + si.nPG + '/20 · urutan ' + (si.acakUrutan ? 'acak' : 'tetap') +
+            ' · opsi ' + (si.acakOpsi ? 'acak' : 'tetap');
+  if (si.nPG < 20) ket += ' · soal: ' + si.ids.join(',');
+  return ket;
+}
+
 function buatPayload(hasil) {
   var selesai = new Date().toISOString();
   var durasiMs = Date.now() - new Date(state.mulai).getTime();
+  var dipilih = {};
+  state.qOrder.forEach(function (id) { dipilih[id] = 1; });   // semua soal dalam set (PG + rumpang + esai)
   var p = {
     'Timestamp': fmtDate(selesai),
     'Nama': state.nama, 'Kelas': state.kelas, 'No. Absen': state.absen,
@@ -622,9 +770,10 @@ function buatPayload(hasil) {
     'Durasi Pengerjaan': fmtDur(durasiMs),
     'Skor PG (maks 60)': hasil.skor.pg, 'Skor Rumpang (maks 20)': hasil.skor.rumpang,
     'Skor Esai Otomatis (maks 20)': hasil.skor.esai, 'Total Otomatis (maks 100)': hasil.total,
-    'Status Koreksi': 'Skor esai otomatis (kata kunci) — perlu koreksi guru'
+    'Status Koreksi': 'Skor esai otomatis (kata kunci) — perlu koreksi guru',
+    'Set Soal': keteranganSet()
   };
-  SOAL.forEach(function (s) { p[s.id] = displayJawaban(s); });
+  SOAL.forEach(function (s) { p[s.id] = dipilih[s.id] ? displayJawaban(s) : '-'; });
   return p;
 }
 
@@ -635,7 +784,7 @@ function doSubmit(auto) {
   clearInterval(timerInt);
   var hasil = hitungSemua();
   var payload = buatPayload(hasil);
-  lastResult = { payload: payload, hasil: hasil, sent: false, reason: '' };
+  lastResult = { payload: payload, hasil: hasil, sent: false, reason: '', setInfo: state.setInfo };
   kirimKeSheet(hasil, payload, auto);
 }
 
@@ -677,7 +826,7 @@ function kirimUlang() {
     method: 'POST', body: JSON.stringify(pend.payload),
     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
   }).then(function (r) { return r.json(); }).then(function (j) {
-    if (j && j.ok) { lastResult.sent = true; lsDel(LS_PEND); toast('Terkirim ulang ke spreadsheet ✔'); renderResult(lastResult); }
+    if (j && j.ok) { if (lastResult) lastResult.sent = true; lsDel(LS_PEND); refreshPending(); toast('Terkirim ulang ke spreadsheet ✔'); renderResult(lastResult); }
     else throw new Error(j && j.error ? j.error : 'Gagal');
   }).catch(function (e) { toast('Gagal mengirim ulang: ' + e.message, true); });
 }
@@ -705,7 +854,7 @@ function renderResult(LR, status) {
   var statusBox = LR.sent
     ? '<div class="okbox">✅ Jawaban sudah masuk ke spreadsheet nilai guru.</div>'
     : (!cfg.url
-      ? '<div class="warnbox">⚠️ URL spreadsheet belum diatur. Jawaban tersimpan di perangkat ini — guru dapat mengatur URL lewat ⚙️ lalu tekan “Kirim ulang”, atau unduh sebagai cadangan.</div>'
+      ? '<div class="warnbox">⚠️ URL spreadsheet belum diatur oleh guru. Jawaban tersimpan di perangkat ini — guru dapat membuka panel admin (ketuk judul 5× + PIN) lalu mengatur URL dan menekan “Kirim ulang”, atau unduh sebagai cadangan.</div>'
       : '<div class="errbox">❌ Jawaban belum terkirim. Tersimpan di perangkat — tekan “Kirim ulang” bila internet/URL sudah siap, atau unduh sebagai cadangan.</div>');
 
   var html = '<div class="card scorehero"><h2>Hasil Latihan ASAS</h2>' +
@@ -716,6 +865,7 @@ function renderResult(LR, status) {
     '<div><b>' + h.skor.esai + '/20</b><span>Esai (otomatis)</span></div></div>' +
     statusBox +
     '<p class="hint">Skor esai adalah <b>penilaian awal berbasis kata kunci</b>; nilai akhir ditentukan guru. ' +
+    (LR.setInfo && LR.setInfo.nPG < 20 ? 'Set soalmu berisi ' + LR.setInfo.nPG + ' soal PG (acak), skor PG sudah diskalakan ke 60. ' : '') +
     (cfg.pembahasan ? 'Pembahasan lengkap ada di bawah.' : 'Pembahasan dinonaktifkan oleh guru.') + '</p>' +
     '<div class="btnrow">' +
     (LR.sent ? '' : '<button class="ghost" id="btnRetry">🔁 Kirim ulang ke spreadsheet</button>') +
@@ -769,12 +919,81 @@ function tutupSemua() {
   toast('Data pengerjaan dihapus dari perangkat.');
 }
 
+/* ================= ADMIN (HANYA GURU) ================= */
+var LS_PIN = 'asasKX_adminpin';
+
+function hashPin(p) {
+  var h = 5381, i;
+  p = String(p);
+  for (i = 0; i < p.length; i++) { h = (((h << 5) + h) ^ p.charCodeAt(i)) >>> 0; }
+  return 'h' + h.toString(36) + '-' + p.length;
+}
+function pinOk(p) { return hashPin(p) === (lsLoad(LS_PIN) || hashPin('1234')); }
+
+function bukaPin() {
+  $('#inPin').value = '';
+  $('#pinErr').hidden = true;
+  $('#modalPin').hidden = false;
+  setTimeout(function () { $('#inPin').focus(); }, 60);
+}
+function cobaPin() {
+  if (pinOk($('#inPin').value)) {
+    $('#modalPin').hidden = true;
+    bukaSettings();
+  } else {
+    $('#pinErr').hidden = false;
+    $('#inPin').value = '';
+    $('#inPin').focus();
+  }
+}
+function gantiPin() {
+  var p = $('#newPin').value.trim(), st = $('#pinStatus');
+  if (p.length < 4) { st.innerHTML = '<div class="errbox">PIN minimal 4 karakter.</div>'; return; }
+  lsSave(LS_PIN, hashPin(p));
+  $('#newPin').value = '';
+  st.innerHTML = '<div class="okbox">✅ PIN berhasil diganti. Simpan PIN baru Anda dengan aman.</div>';
+  toast('PIN admin diperbarui ✔');
+}
+
+var adminTap = 0, adminTm = null;
+function ketukAdmin() {
+  adminTap++;
+  clearTimeout(adminTm);
+  adminTm = setTimeout(function () { adminTap = 0; }, 2500);
+  if (adminTap >= 5) { adminTap = 0; bukaPin(); }
+}
+
+function refreshPending() {
+  var pend = lsLoad(LS_PEND), info = $('#pendingInfo');
+  if (pend) {
+    info.innerHTML = '<div class="warnbox">Ada jawaban <b>tertunda</b>: <b>' + esc(pend.nama || '') + '</b> (' +
+      esc(pend.kelas || '') + ') — belum berhasil masuk sheet. Pastikan URL sudah benar lalu klik “Kirim ulang”.</div>';
+    $('#btnPendingSend').hidden = false;
+    $('#btnPendingCsv').hidden = false;
+  } else {
+    info.innerHTML = '<div class="okbox">Tidak ada jawaban tertunda. Semua jawaban yang dikumpulkan di perangkat ini sudah terkirim.</div>';
+    $('#btnPendingSend').hidden = true;
+    $('#btnPendingCsv').hidden = true;
+  }
+}
+function hapusPend() {
+  lsDel(LS_PEND); lsDel(LS_RES);
+  refreshPending();
+  toast('Data jawaban tertunda dihapus dari perangkat ini.');
+}
+
 /* ================= PENGATURAN GURU ================= */
 function bukaSettings() {
   $('#cfgUrl').value = cfg.url || '';
   $('#cfgDurasi').value = cfg.durasi;
   $('#cfgBahasan').checked = !!cfg.pembahasan;
+  $('#cfgAcakUrutan').checked = cfg.acakUrutan !== false;
+  $('#cfgAcakOpsi').checked = cfg.acakOpsi !== false;
+  $('#cfgJumlahPG').value = Math.min(Math.max(parseInt(cfg.jumlahPG, 10) || 20, 5), 20);
   $('#cfgStatus').innerHTML = '';
+  $('#pinStatus').innerHTML = '';
+  $('#newPin').value = '';
+  refreshPending();
   $('#gsCode').value = window.__GS_CODE__ || '';
   $('#modalSettings').hidden = false;
 }
@@ -786,10 +1005,16 @@ function simpanCfg() {
     if (!/^https:\/\//.test(u)) return;
   }
   var d = parseInt($('#cfgDurasi').value, 10);
-  cfg = { url: u, durasi: isNaN(d) ? 90 : Math.max(0, d), pembahasan: $('#cfgBahasan').checked };
+  var nPG = parseInt($('#cfgJumlahPG').value, 10);
+  cfg = {
+    url: u, durasi: isNaN(d) ? 90 : Math.max(0, d), pembahasan: $('#cfgBahasan').checked,
+    acakUrutan: $('#cfgAcakUrutan').checked, acakOpsi: $('#cfgAcakOpsi').checked,
+    jumlahPG: isNaN(nPG) ? 20 : Math.min(Math.max(nPG, 5), 20)
+  };
   lsSave(LS_CFG, cfg);
   $('#durasiInfo').textContent = cfg.durasi > 0 ? cfg.durasi : '∞';
-  $('#cfgStatus').innerHTML = '<div class="okbox">Pengaturan tersimpan di perangkat ini.</div>';
+  refreshStart();
+  $('#cfgStatus').innerHTML = '<div class="okbox">Pengaturan tersimpan. Mode soal acak berlaku untuk <b>pengerjaan baru</b> (progres yang sedang berjalan tidak berubah setnya).</div>';
 }
 
 function ujiKoneksi() {
@@ -826,14 +1051,23 @@ function init() {
   $('#btnSubmit').addEventListener('click', bukaKonfirmasi);
   $('#btnCancelSubmit').addEventListener('click', function () { $('#modalConfirm').hidden = true; });
   $('#btnDoSubmit').addEventListener('click', function () { doSubmit(false); });
-  $('#btnSettings').addEventListener('click', bukaSettings);
+  // akses admin tersembunyi: ketuk judul 5x / URL #admin → wajib PIN
+  $('#adminTrigger').addEventListener('click', ketukAdmin);
+  $('#btnPinOk').addEventListener('click', cobaPin);
+  $('#btnPinCancel').addEventListener('click', function () { $('#modalPin').hidden = true; });
+  $('#inPin').addEventListener('keydown', function (e) { if (e.key === 'Enter') cobaPin(); });
   $('#btnCfgClose').addEventListener('click', function () { $('#modalSettings').hidden = true; });
   $('#btnCfgSave').addEventListener('click', simpanCfg);
   $('#btnCfgTest').addEventListener('click', ujiKoneksi);
   $('#btnCopyCode').addEventListener('click', salinKode);
-  ['#modalConfirm', '#modalSettings'].forEach(function (sel) {
+  $('#btnPinChange').addEventListener('click', gantiPin);
+  $('#btnPendingSend').addEventListener('click', kirimUlang);
+  $('#btnPendingCsv').addEventListener('click', unduhCSV);
+  $('#btnPendingClear').addEventListener('click', hapusPend);
+  ['#modalConfirm', '#modalPin', '#modalSettings'].forEach(function (sel) {
     $(sel).addEventListener('click', function (ev) { if (ev.target === $(sel)) $(sel).hidden = true; });
   });
+  if (location.hash === '#admin') bukaPin();
   window.addEventListener('beforeunload', function (ev) {
     if (state && !submitted) { ev.preventDefault(); ev.returnValue = ''; }
   });
